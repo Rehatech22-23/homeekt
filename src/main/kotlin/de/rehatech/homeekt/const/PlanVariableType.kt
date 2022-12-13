@@ -1,0 +1,14 @@
+package de.rehatech.homeekt.const
+
+enum class PlanVariableType(val id: Float) {
+    NONE(0F),
+    TEMPERATURE_COMFORT_PLUS(1F),
+    TEMPERATURE_COMFORT(2F),
+    TEMPERATURE_ECO(3F),
+    TEMPERATURE_NIGHT(4F),
+    TEMPERATURE_AWAY(5F),
+    TEMPERATURE_WINDOW(6F),
+    TEMPERATURE_VACATION(7F),
+    GENERIC_ON_OFF_PLUG(100F),
+    TEMPERATURE_ON_OFF_PLUG(101F)
+}

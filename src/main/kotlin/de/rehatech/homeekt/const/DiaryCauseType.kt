@@ -1,0 +1,22 @@
+package de.rehatech.homeekt.const
+
+enum class DiaryCauseType(val id: Float) {
+    NONE(0F),
+    NODE_ATTRIBUTE(1F),
+    HOMEEGRAM_TRIGGER(10F),
+    HOMEEGRAM_CONDITION(11F),
+    HOMEEGRAM_ACTION(12F),
+    GROUP(20F),
+    SYSTEM(30F),
+    HIGH_RAM(31F),
+    UPDATE(32F),
+    DOWNLOAD_FAILED(33F),
+    INSTALLATION_FAILED(34F),
+    USER(40F),
+    WRONG_PASSWORD(41F),
+    UNKNOWN_USER_NAME(42F),
+    PLAN(50F),
+    PLAN_SCHEDULE(51F),
+    PLAN_EVENT(52F),
+    AI(60F)
+}

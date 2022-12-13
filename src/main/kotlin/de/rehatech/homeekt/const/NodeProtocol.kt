@@ -1,4 +1,4 @@
-package const
+package de.rehatech.homeekt.const
 
 enum class NodeProtocol(val id: Float) {
     NONE(0.0F),

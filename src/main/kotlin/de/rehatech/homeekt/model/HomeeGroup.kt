@@ -1,7 +1,10 @@
 package de.rehatech.homeekt.model
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class HomeeGroup(
-    var nodes: ArrayList<HomeeNode>,
+    var nodes: ArrayList<nodes>,
     var id: Int,
     var name: String,
     var image: String,

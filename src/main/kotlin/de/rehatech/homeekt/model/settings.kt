@@ -1,6 +1,9 @@
 package de.rehatech.homeekt.model
 
-data class HomeeSettings(
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class settings(
     var local_ssl_enabled: Boolean,
     var wlan_enabled: Int,
     var wlan_ssid: String,

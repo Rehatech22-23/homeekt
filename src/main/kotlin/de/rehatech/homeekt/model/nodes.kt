@@ -1,7 +1,10 @@
 package de.rehatech.homeekt.model
 
-data class HomeeNode(
-    var attribute: ArrayList<HomeeAttribute>,
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class nodes(
+    var attributes: ArrayList<attributes>,
     var id: String,
     var name: String,
     var profile:Int,
@@ -22,4 +25,4 @@ data class HomeeNode(
     var security: Int,
 
 
-)
+    )

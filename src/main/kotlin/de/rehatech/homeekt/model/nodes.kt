@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class nodes(
     var attributes: ArrayList<attributes>,
-    var id: String,
+    var id: Int,
     var name: String,
     var profile:Int,
     var image: String,

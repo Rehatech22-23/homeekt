@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class attributes(
     var id: Int,
-    var node_id: String,
+    var node_id: Int,
     var instance: Int,
     var minimum: Int,
     var maximum:Int,

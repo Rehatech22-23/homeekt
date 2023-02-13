@@ -2,78 +2,80 @@ package de.rehatech.homeekt
 
 import com.google.gson.Gson
 import de.rehatech.homeekt.model.*
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.Json
 import okhttp3.*
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
-import org.w3c.dom.Node
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.*
-import kotlin.time.Duration
+import java.security.MessageDigest
+import java.util.*
+import kotlin.collections.ArrayList
 
-class Homee(val host:String, val user: String, val password: String): WebSocketListener() {
-    var device: String = "homeekt";
-    var pingInterval: Int = 30;
-    var reconnectInterval: Int = 5;
-    var reconnect: Boolean = true;
-    var maxRetries: Int = 5;
-    var token: String? = null;
-    var expiredTime: Long? = null;
+class Homee(private val host:String, private val user: String, private val password: String): WebSocketListener() {
+    private var device: String = "homeekt"
+    private var pingInterval: Int = 30
+    private var reconnectInterval: Int = 5
+    private var reconnect: Boolean = true
+    private var maxRetries: Int = 5
+    private var token: String? = null
+    private var expiredTime: Long? = null
 
-    var webSocket: WebSocket? = null;
+    private var webSocket: WebSocket? = null
 
-    var homeeSettings: settings? = null;
-    val gson = Gson()
+    private var homeeSettings: settings? = null
+    private val gson = Gson()
 
-    var Nodes: ArrayList<nodes> = arrayListOf()
-    var Groups: ArrayList<HomeeGroup> = arrayListOf()
-
-
+    private var nodeslist: ArrayList<nodes> = arrayListOf()
+    private var groupslist: ArrayList<HomeeGroup> = arrayListOf()
 
 
+    //https://stackoverflow.com/questions/46510338/sha-512-hashing-with-android
+    private fun getSHA512(input:String):String{
+        return MessageDigest
+            .getInstance("SHA-512")
+            .digest(input.toByteArray())
+            .fold("") { str, it -> str + "%02x".format(it) }
+    }
+
+     fun getBasicString():String{
+
+        val userstring = "${user}:${getSHA512(password)}"
+        val encodedString: String = Base64.getEncoder().encodeToString(userstring.toByteArray())
+        println(encodedString)
+        return "Basic $encodedString"
+    }
 
     fun get_access_token(){
-        val auth: String;
 
 
-        var boy = "device_name=homeeApi&device_hardware_id=homee-api&device_os=5&device_type=0&device_app=1";
+        val boy = "device_name=homeeApi&device_hardware_id=homee-api&device_os=5&device_type=0&device_app=1"
 
-        var dat = data("homeeApi", "homee-api", 5 ,0 ,1)
-        var boy2 = boy.toRequestBody()
-
-        val jsonObject = JSONObject()
-        jsonObject.put("device", "homeeApi")
-        jsonObject.put("device_hardware_id", "homee-api")
-        jsonObject.put("device_os", "5")
-        jsonObject.put("device_type", "0")
-        jsonObject.put("device_app", "1")
+        val boy2 = boy.toRequestBody()
 
 
-
-        var request = Request.Builder()
+        val request = Request.Builder()
             .url("${getUrl()}/access_token")
-            .addHeader("Authorization","Basic cmVoYXRlY2g6ZWFjOWMwN2Y2MzMwNTI5N2Q5MzM5MTQyZGZkOGYyNDg1NjJmOGYyMjUyNDcyNTVmYjM5Nzc5Y2M0Y2EzYWRiZDFhYmM0MGQ3ZDgzMTAxN2ViZjQyMGQ0MzBlMDQ1YzkwNDU0OWIwZjRkYzhjYjRmNmM3ZjVlMzA1YzcxNzY5MmQ=")
+            .addHeader("Authorization", getBasicString())
             .addHeader("'Content-Type'", "'application/x-www-form-urlencoded'")
             .post(boy2)
 
-            .build();
+            .build()
 
 
         val client = OkHttpClient.Builder()
-            .connectTimeout(2500,TimeUnit.MILLISECONDS)
-            .build();
-        val response: Response = client.newCall(request).execute();
+            .connectTimeout(4500,TimeUnit.MILLISECONDS)
+            .build()
+        val response: Response = client.newCall(request).execute()
         val cookie = response.headers("Set-Cookie")
         if (cookie.size != 1)
         {
             println("Fehler")
         }
-        val cookie1 = cookie[0].split(";");
+        val cookie1 = cookie[0].split(";")
         val listcookie = cookie1[0].split("=")
-        token = listcookie[1];
+        token = listcookie[1]
         var time = cookie1[1].split("=")[1]
-        expiredTime = System.currentTimeMillis() + time.toLong();
+        expiredTime = System.currentTimeMillis() + time.toLong()
 
 
     }
@@ -90,14 +92,14 @@ class Homee(val host:String, val user: String, val password: String): WebSocketL
 
     private fun getUrl():String
     {
-        val url = "http://$host:7681";
-        return url;
+        val url = "http://$host:7681"
+        return url
     }
 
     private  fun getWsUrl():String
     {
-        val url = "ws://$host:7681";
-        return url;
+        val url = "ws://$host:7681"
+        return url
     }
 
 
@@ -162,18 +164,18 @@ class Homee(val host:String, val user: String, val password: String): WebSocketL
         val exnode = getNodeById(node.id)
         if (exnode==null)
         {
-            Nodes.add(node)
+            nodeslist.add(node)
         }
         else
         {
-            Nodes.remove(exnode)
-            Nodes.add(node)
+            nodeslist.remove(exnode)
+            nodeslist.add(node)
         }
     }
 
-    private fun getNodeById(id: String):nodes?
+    private fun getNodeById(id: Int):nodes?
     {
-        for(node in Nodes)
+        for(node in nodeslist)
         {
             if (node.id == id)
             {
@@ -187,13 +189,26 @@ class Homee(val host:String, val user: String, val password: String): WebSocketL
         val exnode = getNodeById(attlist.node_id)
 
         if (exnode != null) {
-            Nodes.remove(exnode)
+            nodeslist.remove(exnode)
 
             exnode.attributes.clear()
             exnode.attributes.addAll(listOf(attlist))
-            Nodes.add(exnode)
+            nodeslist.add(exnode)
 
         }
+    }
+
+    fun connect()
+    {
+        if(token == null) {
+            get_access_token()
+            run()
+        }
+        else if (expiredTime!! <= System.currentTimeMillis())
+        {
+            get_access_token()
+        }
+
     }
 
 
@@ -204,10 +219,12 @@ class Homee(val host:String, val user: String, val password: String): WebSocketL
 
     fun getallNodes()
     {
+        connect()
         webSocket?.send("GET:all")
     }
     fun sendNodeBefehl(node:Int, attributes:Int, targetValue:Double)
     {
+        connect()
         webSocket?.send("PUT:/nodes/${node}/attributes/${attributes}?target_value=${targetValue}")
 
     }

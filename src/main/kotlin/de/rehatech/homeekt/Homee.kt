@@ -25,8 +25,8 @@ class Homee(private val host:String, private val user: String, private val passw
     private var homeeSettings: settings? = null
     private val gson = Gson()
 
-    private var nodeslist: ArrayList<nodes> = arrayListOf()
-    private var groupslist: ArrayList<HomeeGroup> = arrayListOf()
+    var nodeslist: ArrayList<nodes> = arrayListOf()
+    var groupslist: ArrayList<HomeeGroup> = arrayListOf()
 
 
     //https://stackoverflow.com/questions/46510338/sha-512-hashing-with-android

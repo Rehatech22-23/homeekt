@@ -207,6 +207,7 @@ class Homee(private val host:String, private val user: String, private val passw
         else if (expiredTime!! <= System.currentTimeMillis())
         {
             get_access_token()
+            run()
         }
 
     }

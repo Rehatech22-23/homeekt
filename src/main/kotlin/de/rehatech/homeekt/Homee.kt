@@ -7,6 +7,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.*
+import okhttp3.internal.wait
 import java.security.MessageDigest
 import java.util.*
 import kotlin.collections.ArrayList
@@ -88,6 +89,7 @@ class Homee(private val host:String, private val user: String, private val passw
             .addHeader("Sec-WebSocket-Protocol", "v2")
             .build()
         webSocket = client.newWebSocket(request,this)
+
     }
 
     private fun getUrl():String
@@ -109,7 +111,6 @@ class Homee(private val host:String, private val user: String, private val passw
 
     fun handleMessage(jsonObject: JSONObject)
     {
-        println( jsonObject)
         if (jsonObject.has("all"))
         {
             val all = jsonObject.getJSONObject("all")
@@ -121,21 +122,15 @@ class Homee(private val host:String, private val user: String, private val passw
                 update_or_create_node(node)
             }
 
-            val groupjson = all.get("groups")
-            val grouplist = gson.fromJson(groupjson.toString(), Array<HomeeGroup>::class.java)
-
-            val reljson = all.get("relationships")
-            val rellist = gson.fromJson(reljson.toString(), Array<HomeeRelationship>::class.java)
-
 
         }
         else if (jsonObject.has("attribute"))
         {
             val attjson = jsonObject.get("attribute")
-            val attlist = gson.fromJson(attjson.toString(), Array<attributes>::class.java)
-            for (att in attlist){
-                updateAttribute(att)
-            }
+            val attlist = gson.fromJson(attjson.toString(), attributes::class.java)
+
+            updateAttribute(attlist)
+
         }
         else if (jsonObject.has("nodes"))
         {
@@ -146,16 +141,7 @@ class Homee(private val host:String, private val user: String, private val passw
                 update_or_create_node(node)
             }
         }
-        else if (jsonObject.has("relationships"))
-        {
-            val reljson = jsonObject.get("relationships")
-            val rellist = gson.fromJson(reljson.toString(), Array<HomeeRelationship>::class.java)
-        }
-        else if (jsonObject.has("relationships"))
-        {
-            val groupjson = jsonObject.get("groups")
-            val grouplist = gson.fromJson(groupjson.toString(), Array<HomeeGroup>::class.java)
-        }
+
 
     }
 
@@ -213,25 +199,51 @@ class Homee(private val host:String, private val user: String, private val passw
     }
 
 
-
-
-
-
-
-    fun getallNodes()
+    /**
+     * Methode to update all Nodes
+     * @return Boolean?
+     *
+     */
+    fun getallNodes():Boolean?
     {
+
         connect()
-        webSocket?.send("GET:all")
+        var responsSend:Boolean? = null
+        webSocket.runCatching {
+             responsSend= this?.send("GET:all")
+
+
+        }
+        Thread.sleep(2000L)
+        return responsSend
     }
-    fun sendNodeBefehl(node:Int, attributes:Int, targetValue:Double)
+
+    /**
+     * Methode to send a command to Homee
+     * @param nodeId
+     * @param attributesId
+     * @param targetValue
+     * @return Boolean?
+     */
+    fun sendNodeBefehl(nodeId:Int, attributesId:Int, targetValue:Float):Boolean?
     {
         connect()
-        webSocket?.send("PUT:/nodes/${node}/attributes/${attributes}?target_value=${targetValue}")
+        var responsSend:Boolean? = null
+        webSocket.runCatching {
+            responsSend= this?.send("PUT:/nodes/${nodeId}/attributes/${attributesId}?target_value=${targetValue}")
+
+
+        }
+        Thread.sleep(2000L)
+        return responsSend
+
+
 
     }
     override fun onOpen(webSocket: WebSocket, response: Response) {
         println(response)
-        webSocket.send("GET:all")
+        getallNodes()
+
 
     }
 
@@ -241,5 +253,18 @@ class Homee(private val host:String, private val user: String, private val passw
         handleMessage(jsonObject)
 
     }
+
+    override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+        println(t)
+        println(response)
+        super.onFailure(webSocket, t, response)
+    }
+
+    override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+        println(code)
+        webSocket.close(code,null)
+    }
+
+
 
 }

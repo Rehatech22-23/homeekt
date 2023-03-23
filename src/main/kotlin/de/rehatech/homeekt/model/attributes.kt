@@ -1,6 +1,7 @@
 package de.rehatech.homeekt.model
 
 import kotlinx.serialization.Serializable
+import org.json.JSONPropertyIgnore
 
 @Serializable
 data class attributes(
@@ -23,6 +24,7 @@ data class attributes(
     var based_on: Int,
     var name: String,
     var data:String,
+    //var options: options
 
 
 )

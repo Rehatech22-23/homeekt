@@ -190,6 +190,7 @@ class Homee(private val host:String, private val user: String, private val passw
             get_access_token()
             run()
         }
+
         else if (expiredTime!! <= System.currentTimeMillis())
         {
             get_access_token()
@@ -212,7 +213,6 @@ class Homee(private val host:String, private val user: String, private val passw
         webSocket.runCatching {
              responsSend= this?.send("GET:all")
 
-
         }
         Thread.sleep(2000L)
         return responsSend
@@ -229,11 +229,17 @@ class Homee(private val host:String, private val user: String, private val passw
     {
         connect()
         var responsSend:Boolean? = null
-        webSocket.runCatching {
-            responsSend= this?.send("PUT:/nodes/${nodeId}/attributes/${attributesId}?target_value=${targetValue}")
-
+        try {
+            responsSend =
+                webSocket!!.send("PUT:/nodes/${nodeId}/attributes/${attributesId}?target_value=${targetValue}")
 
         }
+        catch (ex:NullPointerException)
+        {
+            connect()
+            sendNodeBefehl(nodeId,attributesId,targetValue)
+        }
+
         Thread.sleep(2000L)
         return responsSend
 
@@ -241,7 +247,6 @@ class Homee(private val host:String, private val user: String, private val passw
 
     }
     override fun onOpen(webSocket: WebSocket, response: Response) {
-        println(response)
         getallNodes()
 
 

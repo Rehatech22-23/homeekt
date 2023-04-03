@@ -133,7 +133,7 @@ class Homee(private val host:String, private val user: String, private val passw
 
     /**
      * The Methode proccess the JSONObject from Homee
-     * @param JSONObject
+     * @param
      */
     fun handleMessage(jsonObject: JSONObject)
     {

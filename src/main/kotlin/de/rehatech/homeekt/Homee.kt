@@ -12,8 +12,10 @@ import java.security.MessageDigest
 import java.util.*
 import kotlin.collections.ArrayList
 
-class Homee(private val host:String, private val user: String, private val password: String): WebSocketListener() {
-    private var device: String = "homeekt"
+/**
+ * This class implies the communication between it and the Homee device.
+ */
+class Homee(private val host:String, private val user: String, private val password: String, private val device: String = "homeekt"): WebSocketListener() {
     private var pingInterval: Int = 30
     private var reconnectInterval: Int = 5
     private var reconnect: Boolean = true
@@ -30,7 +32,13 @@ class Homee(private val host:String, private val user: String, private val passw
     var groupslist: ArrayList<HomeeGroup> = arrayListOf()
 
 
+
     //https://stackoverflow.com/questions/46510338/sha-512-hashing-with-android
+    /**
+     *  get a SHA512 Hash from a String
+     *  @param input A String
+     *  @return A String with a Hash from input String
+     */
     private fun getSHA512(input:String):String{
         return MessageDigest
             .getInstance("SHA-512")
@@ -38,6 +46,10 @@ class Homee(private val host:String, private val user: String, private val passw
             .fold("") { str, it -> str + "%02x".format(it) }
     }
 
+    /**
+     * Encoded the User and Passwort with Base64
+     * @return A Base64 encoded String
+     */
      fun getBasicString():String{
 
         val userstring = "${user}:${getSHA512(password)}"
@@ -46,10 +58,13 @@ class Homee(private val host:String, private val user: String, private val passw
         return "Basic $encodedString"
     }
 
+    /**
+     * The methode create a http reqest to get a access Token from Homee
+     */
     fun get_access_token(){
 
 
-        val boy = "device_name=homeeApi&device_hardware_id=homee-api&device_os=5&device_type=0&device_app=1"
+        val boy = "device_name=${device}&device_hardware_id=homeekt-api&device_os=5&device_type=0&device_app=1"
 
         val boy2 = boy.toRequestBody()
 
@@ -81,6 +96,9 @@ class Homee(private val host:String, private val user: String, private val passw
 
     }
 
+    /**
+     * Start a websocket
+     */
     fun run()
     {
         val client = OkHttpClient()
@@ -92,12 +110,20 @@ class Homee(private val host:String, private val user: String, private val passw
 
     }
 
+    /**
+     *
+     * @return return the url with Port
+     */
     private fun getUrl():String
     {
         val url = "http://$host:7681"
         return url
     }
 
+    /**
+     * get the url for websocket
+     * @return
+     */
     private  fun getWsUrl():String
     {
         val url = "ws://$host:7681"
@@ -105,12 +131,13 @@ class Homee(private val host:String, private val user: String, private val passw
     }
 
 
-
-
-
-
+    /**
+     * The Methode proccess the JSONObject from Homee
+     * @param JSONObject
+     */
     fun handleMessage(jsonObject: JSONObject)
     {
+        // Check the Key
         if (jsonObject.has("all"))
         {
             val all = jsonObject.getJSONObject("all")
@@ -145,6 +172,9 @@ class Homee(private val host:String, private val user: String, private val passw
 
     }
 
+    /**
+     * Update or Create a Node
+     */
     private fun update_or_create_node(node: nodes)
     {
         val exnode = getNodeById(node.id)
@@ -159,6 +189,7 @@ class Homee(private val host:String, private val user: String, private val passw
         }
     }
 
+
     private fun getNodeById(id: Int):nodes?
     {
         for(node in nodeslist)
@@ -171,19 +202,40 @@ class Homee(private val host:String, private val user: String, private val passw
         return null
     }
 
+    /**
+     * The Methode update the Attribute List of a Node
+     */
     private  fun updateAttribute(attlist:attributes) {
         val exnode = getNodeById(attlist.node_id)
 
-        if (exnode != null) {
-            nodeslist.remove(exnode)
 
-            exnode.attributes.clear()
-            exnode.attributes.addAll(listOf(attlist))
-            nodeslist.add(exnode)
+        if (exnode != null) {
+            val exatt = getAttributeById(exnode, attlist.id)
+            if (exatt != null)
+            {
+              exnode.attributes.remove(exatt)
+              exnode.attributes.add(attlist)
+            }
 
         }
     }
 
+
+    private  fun getAttributeById(node: nodes, id: Int): attributes?
+    {
+        for(att in node.attributes)
+        {
+            if(att.id == id)
+            {
+                return att
+            }
+        }
+        return  null
+    }
+
+    /**
+     * Check the connect and reconnect
+     */
     fun connect()
     {
         if(token == null) {
@@ -260,9 +312,10 @@ class Homee(private val host:String, private val user: String, private val passw
     }
 
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
-        println(t)
-        println(response)
-        super.onFailure(webSocket, t, response)
+        println("Fehler: " + response?.code)
+        response?.close()
+        webSocket.close(1,null)
+        run()
     }
 
     override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {

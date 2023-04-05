@@ -7,7 +7,6 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.*
-import okhttp3.internal.wait
 import java.security.MessageDigest
 import java.util.*
 import kotlin.collections.ArrayList
@@ -16,20 +15,14 @@ import kotlin.collections.ArrayList
  * This class implies the communication between it and the Homee device.
  */
 class Homee(private val host:String, private val user: String, private val password: String, private val device: String = "homeekt"): WebSocketListener() {
-    private var pingInterval: Int = 30
-    private var reconnectInterval: Int = 5
-    private var reconnect: Boolean = true
-    private var maxRetries: Int = 5
     private var token: String? = null
     private var expiredTime: Long? = null
 
     private var webSocket: WebSocket? = null
 
-    private var homeeSettings: settings? = null
     private val gson = Gson()
 
     var nodeslist: ArrayList<nodes> = arrayListOf()
-    var groupslist: ArrayList<HomeeGroup> = arrayListOf()
 
 
 
@@ -61,7 +54,7 @@ class Homee(private val host:String, private val user: String, private val passw
     /**
      * The methode create a http reqest to get a access Token from Homee
      */
-    fun get_access_token(){
+    fun getAccessToken(){
 
 
         val boy = "device_name=${device}&device_hardware_id=homeekt-api&device_os=5&device_type=0&device_app=1"
@@ -90,7 +83,7 @@ class Homee(private val host:String, private val user: String, private val passw
         val cookie1 = cookie[0].split(";")
         val listcookie = cookie1[0].split("=")
         token = listcookie[1]
-        var time = cookie1[1].split("=")[1]
+        val time = cookie1[1].split("=")[1]
         expiredTime = System.currentTimeMillis() + time.toLong()
 
 
@@ -111,23 +104,19 @@ class Homee(private val host:String, private val user: String, private val passw
     }
 
     /**
-     *
+     * get the Url from Homee
      * @return return the url with Port
      */
-    private fun getUrl():String
-    {
-        val url = "http://$host:7681"
-        return url
+    private fun getUrl(): String {
+        return "http://$host:7681"
     }
 
     /**
      * get the url for websocket
      * @return
      */
-    private  fun getWsUrl():String
-    {
-        val url = "ws://$host:7681"
-        return url
+    private fun getWsUrl(): String {
+        return "ws://$host:7681"
     }
 
 
@@ -141,12 +130,11 @@ class Homee(private val host:String, private val user: String, private val passw
         if (jsonObject.has("all"))
         {
             val all = jsonObject.getJSONObject("all")
-            println(all.toString())
             val nodejson = all.get("nodes")
             val nodelist = gson.fromJson(nodejson.toString(), Array<nodes>::class.java)
             for (node in nodelist)
             {
-                update_or_create_node(node)
+                updateOrCreateNode(node)
             }
 
 
@@ -165,7 +153,7 @@ class Homee(private val host:String, private val user: String, private val passw
             val nodelist = gson.fromJson(nodejson.toString(), Array<nodes>::class.java)
             for (node in nodelist)
             {
-                update_or_create_node(node)
+                updateOrCreateNode(node)
             }
         }
 
@@ -175,7 +163,7 @@ class Homee(private val host:String, private val user: String, private val passw
     /**
      * Update or Create a Node
      */
-    private fun update_or_create_node(node: nodes)
+    private fun updateOrCreateNode(node: nodes)
     {
         val exnode = getNodeById(node.id)
         if (exnode==null)
@@ -190,6 +178,11 @@ class Homee(private val host:String, private val user: String, private val passw
     }
 
 
+    /**
+     *  get a Node by Id
+     *  @param id Homee Id
+     *  @return nodes
+     */
     private fun getNodeById(id: Int):nodes?
     {
         for(node in nodeslist)
@@ -221,6 +214,14 @@ class Homee(private val host:String, private val user: String, private val passw
     }
 
 
+
+    /**
+     *  get a Attribute by Id
+     *
+     *  @param node Homee Node
+     *  @param id Attribute Id
+     *  @return
+     */
     private  fun getAttributeById(node: nodes, id: Int): attributes?
     {
         for(att in node.attributes)
@@ -239,13 +240,13 @@ class Homee(private val host:String, private val user: String, private val passw
     fun connect()
     {
         if(token == null) {
-            get_access_token()
+            getAccessToken()
             run()
         }
 
         else if (expiredTime!! <= System.currentTimeMillis())
         {
-            get_access_token()
+            getAccessToken()
             run()
         }
 
@@ -314,7 +315,7 @@ class Homee(private val host:String, private val user: String, private val passw
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
         println("Fehler: " + response?.code)
         response?.close()
-        webSocket.close(1,null)
+        webSocket.close(1000,null)
         run()
     }
 

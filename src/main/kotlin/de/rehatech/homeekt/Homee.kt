@@ -47,7 +47,6 @@ class Homee(private val host:String, private val user: String, private val passw
 
         val userstring = "${user}:${getSHA512(password)}"
         val encodedString: String = Base64.getEncoder().encodeToString(userstring.toByteArray())
-        println(encodedString)
         return "Basic $encodedString"
     }
 

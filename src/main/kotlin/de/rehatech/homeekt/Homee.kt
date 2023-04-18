@@ -84,6 +84,7 @@ class Homee(private val host:String, private val user: String, private val passw
         token = listcookie[1]
         val time = cookie1[1].split("=")[1]
         expiredTime = System.currentTimeMillis() + time.toLong()
+        response.close()
 
 
     }
@@ -311,15 +312,17 @@ class Homee(private val host:String, private val user: String, private val passw
 
     }
 
-    override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+    override fun onFailure(webSocket2: WebSocket, t: Throwable, response: Response?) {
         println("Fehler: " + response?.code)
         response?.close()
-        webSocket.close(1000,null)
-        run()
+        webSocket2.close(1000,null)
+        webSocket = null
+        expiredTime = null
+        token = null
     }
 
     override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
-        println(code)
+        println("Closed Websocket")
         webSocket.close(code,null)
     }
 

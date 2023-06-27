@@ -129,6 +129,7 @@ class Homee(private val host:String, private val user: String, private val passw
         // Check the Key
         if (jsonObject.has("all"))
         {
+            // Update alll Infos
             val all = jsonObject.getJSONObject("all")
             val nodejson = all.get("nodes")
             val nodelist = gson.fromJson(nodejson.toString(), Array<nodes>::class.java)
@@ -141,6 +142,7 @@ class Homee(private val host:String, private val user: String, private val passw
         }
         else if (jsonObject.has("attribute"))
         {
+            //Update Attribute
             val attjson = jsonObject.get("attribute")
             val attlist = gson.fromJson(attjson.toString(), attributes::class.java)
 
@@ -149,6 +151,7 @@ class Homee(private val host:String, private val user: String, private val passw
         }
         else if (jsonObject.has("nodes"))
         {
+            // Update nodes
             val nodejson = jsonObject.get("nodes")
             val nodelist = gson.fromJson(nodejson.toString(), Array<nodes>::class.java)
             for (node in nodelist)
@@ -299,28 +302,40 @@ class Homee(private val host:String, private val user: String, private val passw
 
 
     }
+
+    /**
+     * Websocket open methode
+     */
     override fun onOpen(webSocket: WebSocket, response: Response) {
         getallNodes()
 
 
     }
 
-
+    /**
+     * Websocket onMessage Methode
+     */
     override fun onMessage(webSocket: WebSocket, text: String) {
         val jsonObject = JSONObject(text)
         handleMessage(jsonObject)
 
     }
 
-    override fun onFailure(webSocket2: WebSocket, t: Throwable, response: Response?) {
+    /**
+     * Websocket onFailure Methode
+     */
+    override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
         println("Fehler: " + response?.code)
         response?.close()
-        webSocket2.close(1000,null)
-        webSocket = null
+        webSocket.close(1000,null)
+        this.webSocket = null
         expiredTime = null
         token = null
     }
 
+    /**
+     * Websocket onClosed Methode
+     */
     override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
         println("Closed Websocket")
         webSocket.close(code,null)

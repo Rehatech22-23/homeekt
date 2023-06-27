@@ -18,7 +18,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib")
     implementation("com.google.code.gson:gson:2.10")
-    implementation("org.json:json:20220924")
+    implementation("org.json:json:20230227")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.1")
 

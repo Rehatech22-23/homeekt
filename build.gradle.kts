@@ -40,7 +40,7 @@ publishing{
         create<MavenPublication>("maven"){
             groupId = "de.rehatech"
             artifactId ="homeekt"
-            version = "0.0.1"
+            version = "1.0.0"
             from(components["java"])
         }
     }
